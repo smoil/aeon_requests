@@ -21,7 +21,11 @@
               <%= label_and_value I18n.t("container.type_3"), i18n_enum(:container, 'type_3', instance['container']['type_3']) %>
               <%= label_and_value I18n.t("container.indicator_3"), instance['container']['indicator_3'] %>
               <%= label_and_value I18n.t("container.container_extent"), "#{instance['container']['container_extent']} #{i18n_enum(:container, 'container_extent_type', instance['container']['container_extent_type'])}" %>
-              <%= label_and_value "", link_to("Request via AEON", "/plugins/aeon_requests#{@archival_object["uri"]}", class: "btn btn-primary",  target: "_blank") %>
+              <% if @archival_object.present? %>
+                <%= label_and_value "", link_to("Request via AEON", "/plugins/aeon_requests#{@archival_object["uri"]}", class: "btn btn-primary",  target: "_blank") %>
+              <% elsif @resource.present? %>
+                <%= label_and_value "", link_to("Request via AEON", "/plugins/aeon_requests#{@resource["uri"]}", class: "btn btn-primary",  target: "_blank") %>
+              <% end %>
             <% end %>
           </dl>
         </li>

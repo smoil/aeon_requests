@@ -10,6 +10,13 @@ class AeonRequestsController < ApplicationController
     render text: archival_object.to_json
   end
 
+  def resource
+    resource = JSONModel(:resource).find(params[:id], :repo_id => params[:repo_id])
+    raise RecordNotFound.new if (!resource || !resource.publish)
+
+    render text: resource.to_json
+  end
+
   private
 
   def get_repository

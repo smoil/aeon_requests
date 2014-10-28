@@ -5,4 +5,9 @@ ArchivesSpacePublic::Application.routes.draw do
     :via => [:get]
   )
 
+  match(
+    '/plugins/aeon_requests/repositories/:repo_id/resources/:id' => 'aeon_requests#resource',
+    :via => [:get]
+  )
+
 end
