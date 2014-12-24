@@ -7,28 +7,40 @@ class AeonRequestsController < ApplicationController
     archival_object = JSONModel(:archival_object).find(params[:id], repo_id: params[:repo_id])
     raise RecordNotFound.new if (!archival_object || archival_object.has_unpublished_ancestor || !archival_object.publish)
 
-    location = fetch_location_for(archival_object)
+    locations = fetch_locations_for(archival_object)
+    resource  = fetch_resource_for(archival_object)
 
     result = {
-      archival_object: archival_object,
-      location: location
+      aeon_request_data: aeon_request_hash(archival_object),
+      archival_object:   archival_object,
+      locations:         locations,
+      resource:          resource
     }
 
-    render text: result.to_json
+    respond_to do |format|
+      format.html { redirect_to aeon_link(archival_object) }
+      format.json { render text: result.to_json }
+    end
+
   end
 
   def resource
     resource = JSONModel(:resource).find(params[:id], repo_id: params[:repo_id])
     raise RecordNotFound.new if (!resource || !resource.publish)
 
-    location = fetch_location_for(resource)
+    locations = fetch_locations_for(resource)
 
     result = {
-      resource: resource,
-      location: location
+      aeon_request_data: aeon_request_hash(resource),
+      resource:          resource,
+      locations:         locations
     }
 
-    render text: result.to_json
+    respond_to do |format|
+      format.html { redirect_to aeon_link(resource) }
+      format.json { render text: result.to_json }
+    end
+
   end
 
   private
@@ -37,9 +49,141 @@ class AeonRequestsController < ApplicationController
     @repository = @repositories.select{|repo| JSONModel(:repository).id_for(repo.uri).to_s === params[:repo_id]}.first
   end
 
-  def fetch_location_for(record)
-    location_id = record[:instances].first["container"]["container_locations"].first["ref"].split("/").last
-    JSONModel(:location).find(location_id)
+  def fetch_resource_for(record)
+    resource_id = record["resource"]["ref"].split("/").last
+    JSONModel(:resource).find(resource_id, repo_id: params[:repo_id])
+  rescue
+    "resource not found"
+  end
+
+  def callnum_for(record)
+    if record["jsonmodel_type"] == "archival_object"
+      resource_id = record["resource"]["ref"].split("/").last
+      JSONModel(:resource).find(resource_id, repo_id: params[:repo_id])["id_0"]
+    elsif record["jsonmodel_type"] == "resource"
+      record["id_0"]
+    end
+  end
+
+  def fetch_locations_for(record)
+    locations = []
+
+    record["instances"].each do |instance|
+      next unless instance["container"].present?
+      next unless instance["container"]["container_locations"].present?
+
+      container_details = "#{instance["container"]["type_1"]}: #{instance["container"]["indicator_1"]}, " +
+        "#{instance["container"]["type_2"]}: #{instance["container"]["indicator_2"]}"
+
+      instance["container"]["container_locations"].each do |container_location|
+        next unless container_location["ref"].present?
+
+        location_id = container_location["ref"].split("/").last
+        location    = JSONModel(:location).find(location_id)
+        title       = location["title"]
+        locations << {
+          area:     title,
+          sub_area: container_details,
+          location: location
+        }
+      end
+    end
+
+    locations
+  end
+
+  def locations_data_for(record)
+    records = ancestry_for(record).reverse
+
+    records.each do |record|
+      locations = fetch_locations_for(record)
+      return locations unless locations.empty?
+    end
+
+    []
+  end
+
+  def ancestry_for(record)
+    case record["jsonmodel_type"]
+    when "archival_object"
+      archival_object = ArchivalObjectView.new(record)
+      tree_view       = Search.tree_view(archival_object.uri)
+
+      breadcrumbs = []
+
+      tree_view["path_to_root"].each do |node|
+        raise RecordNotFound.new if not node["publish"] == true
+
+        if node["node_type"] == "resource"
+          r = JSONModel(:resource).find(node["id"], repo_id: params[:repo_id])
+          breadcrumbs << r
+        elsif node["node_type"] == "archival_object"
+          ao = JSONModel(:archival_object).find(node["id"], repo_id: params[:repo_id])
+          breadcrumbs << ao
+        end
+      end
+
+      breadcrumbs << record
+    when "resource"
+      [record]
+    end
+  end
+
+  # change to just grab the top most level title
+  def ancestry_titles_for(record)
+    case record["jsonmodel_type"]
+    when "archival_object"
+      # see public/app/controller/records_controller#archival_object
+      archival_object = ArchivalObjectView.new(record)
+      tree_view = Search.tree_view(archival_object.uri)
+
+      breadcrumbs = []
+
+      tree_view["path_to_root"].each do |node|
+        raise RecordNotFound.new if not node["publish"] == true
+
+        if node["node_type"] === "resource"
+          breadcrumb_title = (node["finding_aid_status"] === 'completed' and not node["finding_aid_title"].nil?) ? node["finding_aid_title"] : node["title"]
+          breadcrumbs.push(breadcrumb_title)
+        else
+          breadcrumbs.push(node["title"])
+        end
+      end
+
+      breadcrumbs.push(archival_object.display_string)
+    when "resource"
+      # see public/app/controller/records_controller#resource
+      resource = ResourceView.new(record)
+      breadcrumb_title = (resource.finding_aid_status === 'completed' and not resource.finding_aid_title.nil?) ? resource.finding_aid_title : resource.title
+      [breadcrumb_title]
+    end
+  end
+
+  def aeon_request_hash(record)
+    title = ancestry_titles_for(record).first
+
+    repo_codes = {
+      "USC SpeCol"   => "specol",
+      "Cinema/TV"    => "cinema",
+      "ONE Archives" => "one"
+    }
+    site        = repo_codes[@repository["repo_code"]] || "specol"
+    description = locations_data_for(record).map{ |l| "#{l[:area]}, #{l[:sub_area]}" }.join("; ")
+    item_volume = locations_data_for(record).map{ |l| "#{l[:sub_area]}" }.join("; ")
+    callnum = callnum_for(record)
+
+    {
+      title:       title,
+      site:        site,
+      description: description,
+      item_volume: item_volume,
+      callnum:     callnum
+    }
+  end
+
+  def aeon_link(record)
+    values = aeon_request_hash(record)
+    "https://aeon.usc.edu/OpenURL?title=#{values[:title]}&Site=#{values[:site]}&description=#{values[:description]}&callnum=#{values[:callnum]}&itemvolume=#{values[:item_volume]}"
   end
 
 end

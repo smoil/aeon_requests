@@ -1,0 +1,11 @@
+<%- if @archival_object.present? %>
+  <%- if display_aeon_request_links_for(@archival_object) %>
+    <%= link_to("Request Materials", "/plugins/aeon_requests#{@archival_object["uri"]}", class: "btn btn-primary", style: "float: right; margin-left: .25em; font-weight: normal;",  target: "_blank") %>
+    <%= link_to("JSON", "/plugins/aeon_requests#{@archival_object["uri"]}.json", class: "btn btn-primary", style: "float: right; margin-left: .25em; font-weight: normal;",  target: "_blank") %>
+  <%- end %>
+<%- elsif @resource.present? %>
+  <%- if display_aeon_request_links_for(@resource) %>
+    <%= link_to("Request Materials", "/plugins/aeon_requests#{@resource["uri"]}", class: "btn btn-primary", style: "float: right; margin-left: .25em; font-weight: normal;", target: "_blank") %>
+    <%= link_to("JSON", "/plugins/aeon_requests#{@resource["uri"]}.json", class: "btn btn-primary", style: "float: right; margin-left: .25em; font-weight: normal;", target: "_blank") %>
+  <%- end %>
+<%- end %>
