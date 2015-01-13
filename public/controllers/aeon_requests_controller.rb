@@ -1,3 +1,5 @@
+require "cgi"
+
 class AeonRequestsController < ApplicationController
 
   skip_before_filter :unauthorised_access
@@ -167,23 +169,24 @@ class AeonRequestsController < ApplicationController
       "Cinema/TV"    => "cinema",
       "ONE Archives" => "one"
     }
+
     site        = repo_codes[@repository["repo_code"]] || "specol"
-    description = locations_data_for(record).map{ |l| "#{l[:area]}, #{l[:sub_area]}" }.join("; ")
+    location    = locations_data_for(record).map{ |l| "#{l[:area]}, #{l[:sub_area]}" }.join("; ")
     item_volume = locations_data_for(record).map{ |l| "#{l[:sub_area]}" }.join("; ")
-    callnum = callnum_for(record)
+    callnum     = callnum_for(record)
 
     {
       title:       title,
       site:        site,
-      description: description,
+      location:    location,
       item_volume: item_volume,
       callnum:     callnum
     }
   end
 
   def aeon_link(record)
-    values = aeon_request_hash(record)
-    "https://aeon.usc.edu/OpenURL?title=#{values[:title]}&Site=#{values[:site]}&description=#{values[:description]}&callnum=#{values[:callnum]}&itemvolume=#{values[:item_volume]}"
+    params = aeon_request_hash(record).map { |k,v| "#{k}=#{CGI.escape(v)}" }
+    "https://aeon.usc.edu/OpenURL?#{params.join('&')}"
   end
 
 end
