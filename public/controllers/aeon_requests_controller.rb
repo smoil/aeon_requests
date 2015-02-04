@@ -185,7 +185,7 @@ class AeonRequestsController < ApplicationController
   end
 
   def aeon_link(record)
-    params = aeon_request_hash(record).map { |k,v| "#{k}=#{CGI.escape(v)}" }
+    params = aeon_request_hash(record).map { |k,v| "#{k.to_s.camelcase}=#{CGI.escape(v)}" }
     "https://aeon.usc.edu/OpenURL?#{params.join('&')}"
   end
 
