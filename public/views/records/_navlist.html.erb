@@ -1,0 +1,40 @@
+<div id="">
+  <ul class="nav nav-list as-nav-list" data-spy="affix">
+
+    <%- if display_aeon_request_links_for(@archival_object || @resource) %>
+      <li>
+        <%= link_to("/plugins/aeon_requests#{record["uri"]}", style: "background: #ffcc00", target: "_blank") do %>
+          Request Materials <span class="icon-chevron-right"></span>
+        <% end %>
+      </li>
+    <%- end %>
+
+    <li><a href="#summary"><%= I18n.t("#{record_type}._public.section.summary") %> <span class="icon-chevron-right"></span></a></li>
+
+    <% entries.each do |entry| %>
+      <% if entry[:property] %>
+        <% unless record[entry[:property]].blank? %>
+          <li>
+            <a href="#<%= entry[:anchor] %>">
+              <%= I18n.t("#{entry[:subrecord_type]}._plural") %>
+              <span class="badge badge-info">
+                <%= record[entry[:property]].length
+                %></span><span class="icon-chevron-right"></span>
+            </a>
+          </li>
+        <% end %>
+      <% else %>
+        <li>
+          <a href="#<%= entry[:anchor] %>">
+            <%= entry[:label] %>
+            <span class="icon-chevron-right"></span>
+          </a>
+        </li>
+      <% end %>
+    <% end %>
+  </ul>
+</div>
+
+<script>
+  var RECORD_URI = "<%= record.uri %>";
+</script>

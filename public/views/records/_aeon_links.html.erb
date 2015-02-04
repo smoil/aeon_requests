@@ -1,5 +1,0 @@
-<% record = @archival_object || @resource %>
-
-<%- if record.present? && display_aeon_request_links_for(record) %>
-  <%= link_to("Request Materials", "/plugins/aeon_requests#{record["uri"]}", class: "btn btn-primary", style: "float: right; margin: 0 .25em .25em .25em; font-weight: normal;",  target: "_blank") %>
-<%- end %>
