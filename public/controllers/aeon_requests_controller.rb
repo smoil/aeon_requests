@@ -94,6 +94,8 @@ class AeonRequestsController < ApplicationController
     locations
   end
 
+  # returns locations associated with the record
+  # if no locations are found, move up the records hierarchy and check again
   def locations_data_for(record)
     records = ancestry_for(record).reverse
 
@@ -131,7 +133,6 @@ class AeonRequestsController < ApplicationController
     end
   end
 
-  # change to just grab the top most level title
   def ancestry_titles_for(record)
     case record["jsonmodel_type"]
     when "archival_object"
