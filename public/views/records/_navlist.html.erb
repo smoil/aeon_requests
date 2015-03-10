@@ -3,7 +3,7 @@
 
     <%- if display_aeon_request_links_for(@archival_object || @resource) %>
       <li>
-        <%= link_to("/plugins/aeon_requests#{record["uri"]}", style: "background: #ffcc00", target: "_blank") do %>
+        <%= link_to("/plugins/aeon_requests#{record["uri"]}", class: "aeon_request_link", target: "_blank") do %>
           Request Materials <span class="icon-chevron-right"></span>
         <% end %>
       </li>
