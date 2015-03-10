@@ -16,6 +16,7 @@ This plugin extends ArchivesSpace by adding links on record pages which redirect
 - Edit config.rb to:
   - activate the `aeon_requests` plugin
   - specify the AEON endpoint
+  - optionally provide repository name translations (default will be used if no translation found)
 
 For example, in config.rb:
 
@@ -23,6 +24,12 @@ For example, in config.rb:
 # You may have other plugins
 AppConfig[:plugins] = ['local', 'aeon_requests']
 AppConfig[:aeon_request_endpoint] = 'https://aeon.myinstitution.edu'
+AppConfig[:aeon_request_repository_mappings] = {
+  "Special Collections" => "specol",
+  "Cinema/TV"           => "cinema",
+  "Gov Docs"            => "gov_docs",
+  "default"             => "specol"
+}
 ```
 
 - Start, or restart ArchivesSpace to pick up the configuration.

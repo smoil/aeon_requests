@@ -161,16 +161,17 @@ class AeonRequestsController < ApplicationController
     end
   end
 
+  def determine_site_from_repo_code(repo_code)
+    return repo_code unless AppConfig[:aeon_request_repository_mappings].present?
+
+    AppConfig[:aeon_request_repository_mappings][repo_code] ||
+      AppConfig[:aeon_request_repository_mappings]["default"]
+  end
+
   def aeon_request_hash(record)
     title = ancestry_titles_for(record).first
 
-    repo_codes = {
-      "USC SpeCol"   => "specol",
-      "Cinema/TV"    => "cinema",
-      "ONE Archives" => "one"
-    }
-
-    site        = repo_codes[@repository["repo_code"]] || "specol"
+    site        = determine_site_from_repo_code(@repository["repo_code"])
     location    = locations_data_for(record).map{ |l| "#{l[:area]}, #{l[:sub_area]}" }.join("; ")
     item_volume = locations_data_for(record).map{ |l| "#{l[:sub_area]}" }.join("; ")
     callnum     = callnum_for(record)
