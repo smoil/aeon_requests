@@ -163,10 +163,12 @@ class AeonRequestsController < ApplicationController
   end
 
   def determine_site_from_repo_code(repo_code)
-    return repo_code unless AppConfig[:aeon_request_repository_mappings].present?
-
-    AppConfig[:aeon_request_repository_mappings][repo_code] ||
-      AppConfig[:aeon_request_repository_mappings]["default"]
+    if AppConfig[:aeon_request_repository_mappings].present?
+      AppConfig[:aeon_request_repository_mappings][repo_code] ||
+        AppConfig[:aeon_request_repository_mappings_default]
+    else
+      repo_code
+    end
   end
 
   def aeon_request_hash(record)

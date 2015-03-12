@@ -29,9 +29,10 @@ AppConfig[:aeon_request_endpoint] = 'https://aeon.myinstitution.edu'
 AppConfig[:aeon_request_repository_mappings] = {
   'Special Collections' => 'specol',
   'Cinema/TV'           => 'cinema',
-  'Gov Docs'            => 'gov_docs',
-  'default'             => 'specol'
+  'Gov Docs'            => 'gov_docs'
 }
+# (required if translations are used) Use this value if no translations found
+AppConfig[:aeon_request_repository_mappings_default] = 'specol'
 ```
 
 - Start, or restart ArchivesSpace to pick up the configuration.
